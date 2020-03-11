@@ -8,8 +8,8 @@ import (
 	"os"
 )
 
-var VERSION = "1.0.0"
-var BUILD = "0"
+var Version = ""
+var Build = ""
 
 func main() {
 	//
@@ -17,7 +17,7 @@ func main() {
 	//
 	app := &cli.App{
 		Name:        "covid19-timeseries",
-		Version:     fmt.Sprintf("%s-%s", VERSION, BUILD),
+		Version:     fmt.Sprintf("%s-%s", Version, Build),
 		Description: "Update the SARS CoV timeseries data with them from the German RKI (Robert Koch Institut)",
 		Usage:       "",
 		Flags: []cli.Flag{
