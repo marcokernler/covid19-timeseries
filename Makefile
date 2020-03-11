@@ -2,7 +2,7 @@
 #
 OUT_DIR=./bin
 BINARY=covid19-timeseries
-VERSION=1.0.0
+VERSION=1.1.0
 BUILD=$(shell git rev-parse HEAD)
 PLATFORMS=darwin linux windows
 ARCHITECTURES=386 amd64

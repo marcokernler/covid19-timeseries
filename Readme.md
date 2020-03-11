@@ -17,6 +17,9 @@ $ covid19-timeseries
 
 # update the csv-file an save it under test.csv
 $ covid19-timeseries --output test.csv
+
+# only fetch data from rki and save under rki.csv
+$ covid19-timeseries --fetch-rki-only --output rki.csv
 ```
 
 ## Build from Source
