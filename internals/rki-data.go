@@ -1,0 +1,161 @@
+package internals
+
+import (
+	"github.com/PuerkitoBio/goquery"
+	"net/http"
+	"time"
+)
+
+//
+type RKIData struct {
+	Items []RKIDataItem
+}
+
+//
+type RKIDataItem struct {
+	Province string
+	Country  string
+	Lat      string
+	Lng      string
+	Date     string
+	Cases    string
+}
+
+//
+func (r *RKIData) Fetch(url string) error {
+	// load the html from the given url
+	res, err := http.Get(url)
+	if err != nil {
+		return err
+	}
+
+	//
+	doc, err := goquery.NewDocumentFromReader(res.Body)
+	if err != nil {
+		return err
+	}
+
+	//
+	now := time.Now()
+
+	//
+	doc.Find("#main table").Each(func(index int, tableHtml *goquery.Selection) {
+		//
+		rows := tableHtml.Find("tbody tr")
+
+		rows.Each(func(index int, rowHtml *goquery.Selection) {
+			// omit the last row in the table
+			if index < rows.Length()-1 {
+				// create new item
+				rkiDataItem := RKIDataItem{
+					Country: "Germany",
+					Date:    now.Format("1/2/06"),
+				}
+
+				//
+				rowHtml.Find("td").Each(func(index int, cellHtml *goquery.Selection) {
+					//
+					switch index {
+					case 0:
+						//
+						lat, lng := provinceToLatLng(cellHtml.Text())
+						rkiDataItem.Lat = lat
+						rkiDataItem.Lng = lng
+						//
+						rkiDataItem.Province = provinceI18n(cellHtml.Text())
+					case 1:
+						//
+						rkiDataItem.Cases = cellHtml.Text()
+					}
+				})
+
+				//
+				r.Items = append(r.Items, rkiDataItem)
+			}
+		})
+	})
+
+	return nil
+}
+
+//
+func provinceI18n(province string) string {
+	//
+	switch province {
+	case "Baden-Württemberg":
+		return "Baden-Wuerttemberg"
+	case "Bayern":
+		return "Bavaria"
+	case "Berlin":
+		return "Berlin"
+	case "Brandenburg":
+		return "Brandenburg"
+	case "Bremen":
+		return "Bremen"
+	case "Hamburg":
+		return "Hamburg"
+	case "Hessen":
+		return "Hesse"
+	case "Mecklenburg-Vorpommern":
+		return "Mecklenburg-Vorpommern"
+	case "Niedersachsen":
+		return "Lower Saxony"
+	case "Nordrhein-Westfalen":
+		return "North Rhine Westphalia"
+	case "Rheinland-Pfalz":
+		return "Rhineland-Palatinate"
+	case "Saarland":
+		return "Saarland"
+	case "Sachsen":
+		return "Saxony"
+	case "Sachsen-Anhalt":
+		return "Saxony-Anhalt"
+	case "Schleswig-Holstein":
+		return "Schleswig-Holstein"
+	case "Thüringen":
+		return "Thuringia"
+	}
+
+	return ""
+}
+
+//
+func provinceToLatLng(province string) (string, string) {
+	//
+	switch province {
+	case "Baden-Württemberg":
+		return "48.537778", "9.041111"
+	case "Bayern":
+		return "48.7775", "11.431111"
+	case "Berlin":
+		return "52.52", "13.405"
+	case "Brandenburg":
+		return "52.361944", "13.008056"
+	case "Bremen":
+		return "53.075833", "8.8075"
+	case "Hamburg":
+		return "53.565278", "10.001389"
+	case "Hessen":
+		return "50.666111", "8.591111"
+	case "Mecklenburg-Vorpommern":
+		return "53.616667", "12.7"
+	case "Niedersachsen":
+		return "52.756111", "9.393056"
+	case "Nordrhein-Westfalen":
+		return "51.466667", "7.55"
+	case "Rheinland-Pfalz":
+		return "49.913056", "7.45"
+	case "Saarland":
+		return "49.383056", "6.833056"
+	case "Sachsen":
+		return "51.026944", "13.358889"
+	case "Sachsen-Anhalt":
+		return "51.971111", "11.47"
+	case "Schleswig-Holstein":
+		return "54.47", "9.513889"
+	case "Thüringen":
+		return "50.861111", "11.051944"
+	}
+
+	return "", ""
+}
