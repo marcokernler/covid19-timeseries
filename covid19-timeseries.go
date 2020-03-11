@@ -22,10 +22,10 @@ func main() {
 		Usage:       "",
 		Flags: []cli.Flag{
 			&cli.StringFlag{
-				Name:    "output",
-				Usage:   "The filename of the output file.",
-				Value:   "./time_series_19-covid-Confirmed.csv",
-				Aliases: []string{"o"},
+				Name:        "output",
+				Usage:       "The filename of the output file.",
+				Value:       "./time_series_19-covid-Confirmed.csv",
+				Aliases:     []string{"o"},
 				Destination: &filename,
 			},
 		},
@@ -51,12 +51,6 @@ func main() {
 			if err != nil {
 				log.Printf("Error: %s", err)
 			}
-			// updatedValuesLen := len(p.Data.Items) - originalValuesLen
-			// if updatedValuesLen != originalValuesLen {
-			// 		log.Printf("Done! Updated with %d new values...", updatedValuesLen)
-			// } else {
-			// 		log.Printf("Done! Updated values...")
-			// }
 
 			// save as csv
 			err = p.Save(filename)
