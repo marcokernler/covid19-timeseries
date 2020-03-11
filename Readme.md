@@ -6,6 +6,8 @@ The cli-tool will download the existing [timeseries csv file](https://github.com
 
 ## Usage
 
+Download the binary for your OS from [here](https://github.com/marcokernler/covid19-timeseries/releases).
+
 ```bash
 # print help
 $ covid19-timeseries help
