@@ -1,8 +1,11 @@
 package internals
 
 import (
+	"encoding/csv"
 	"github.com/PuerkitoBio/goquery"
 	"net/http"
+	"os"
+	"strconv"
 	"time"
 )
 
@@ -76,6 +79,88 @@ func (r *RKIData) Fetch(url string) error {
 	})
 
 	return nil
+}
+
+//
+func (r *RKIData) Save(filename string) error {
+	//
+	file, err := os.Create(filename)
+	if err != nil {
+		return err
+	}
+
+	// create the writer
+	writer := csv.NewWriter(file)
+
+	// get the csv header
+	header := csvHeader()
+	// write the header
+	err = writer.Write(header)
+	if err != nil {
+		return err
+	}
+
+	//
+	total := 0
+
+	//
+	for _, item := range r.Items {
+		//
+		csvString := []string{
+			item.Province,
+			item.Country,
+			item.Lat,
+			item.Lng,
+			item.Cases,
+		}
+
+		cases, err := strconv.Atoi(item.Cases)
+		total += cases
+
+		// write the record
+		err = writer.Write(csvString)
+		if err != nil {
+			return err
+		}
+	}
+
+	totalString := []string{
+		"Gesamt",
+		"",
+		"",
+		"",
+		strconv.Itoa(total),
+	}
+
+	// write the record
+	err = writer.Write(totalString)
+	if err != nil {
+		return err
+	}
+
+	// write the buffer to the file
+	writer.Flush()
+	err = writer.Error()
+	if err != nil {
+		return err
+	}
+
+	return file.Close()
+}
+
+// get the header for the csv file
+// used in mode fetch-rki-only
+func csvHeader() []string {
+	//
+	now := time.Now()
+	//
+	return []string{
+		"Province",
+		"Country",
+		"Lat",
+		"Lng",
+		now.Format("1/2/06"),
+	}
 }
 
 //
