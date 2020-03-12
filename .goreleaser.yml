@@ -76,7 +76,10 @@ changelog:
     - '^test:'
 
 release:
-  github:
-    owner: marcokernler
-    name: covid19-timeseries
-  draft: true
+  ids:
+    - none
+  #github:
+  #  owner: marcokernler
+  #  name: covid19-timeseries
+  #draft: true
+  disable: true
