@@ -4,7 +4,6 @@ OUT_DIR=./bin
 BINARY=covid19-timeseries
 VERSION=1.1.0
 BUILD=$(shell git rev-parse HEAD)
-PLATFORMS=darwin linux windows
 ARCHITECTURES=386 amd64
 
 #
@@ -21,9 +20,16 @@ build:
 	go build ${LDFLAGS} -o $(OUT_DIR)/${BINARY}
 
 #
-build_all:
-	$(foreach GOOS, $(PLATFORMS),\
-	$(foreach GOARCH, $(ARCHITECTURES), $(shell export GOOS=$(GOOS); export GOARCH=$(GOARCH); go build -v -o $(OUT_DIR)/$(BINARY)-$(GOOS)-$(GOARCH))))
+build_all: clean linux darwin windows
+
+linux:
+	$(foreach GOARCH, $(ARCHITECTURES), $(shell export GOOS=linux; export GOARCH=$(GOARCH); go build -v -o $(OUT_DIR)/$(BINARY)-linux-$(GOARCH)))
+
+darwin:
+	$(foreach GOARCH, $(ARCHITECTURES), $(shell export GOOS=darwin; export GOARCH=$(GOARCH); go build -v -o $(OUT_DIR)/$(BINARY)-darwin-$(GOARCH)))
+
+windows:
+	$(foreach GOARCH, $(ARCHITECTURES), $(shell export GOOS=windows; export GOARCH=$(GOARCH); go build -v -o $(OUT_DIR)/$(BINARY)-windows-$(GOARCH).exe))
 
 #
 clean:
