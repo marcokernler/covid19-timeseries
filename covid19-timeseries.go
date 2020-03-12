@@ -58,6 +58,7 @@ func main() {
 				return nil
 			}
 
+			// process normally
 			err = mergeWithCoVData(filename)
 			if err != nil {
 				log.Printf("Error: %s", err)
@@ -104,7 +105,7 @@ func mergeWithCoVData(filename string) error {
 		log.Printf("Error: %s", err)
 	}
 
-	log.Printf("Finished. Updated CSV file under '%s'", filename)
+	log.Printf("Finished. Created CSV file under '%s'", filename)
 
 	return nil
 }
@@ -127,7 +128,7 @@ func fetchFromRKI(filename string) error {
 		log.Printf("Error: %s", err)
 	}
 
-	log.Printf("Finished. Updated CSV file under '%s'", filename)
+	log.Printf("Finished. Created CSV file under '%s'", filename)
 
 	return nil
 }
