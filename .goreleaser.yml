@@ -1,0 +1,82 @@
+# This is an example goreleaser.yaml file with some sane defaults.
+# Make sure to check the documentation at http://goreleaser.com
+project_name: covid19-timeseries
+
+before:
+  hooks:
+    # You may remove this if you don't use go modules.
+    - go mod download
+
+builds:
+-
+  id: covid19-timeseries
+  binary: covid19-timeseries
+  env:
+  - CGO_ENABLED=0
+  ldflags:
+    - -s -w -X main.Version={{.Version}}
+    - -s -w -X main.Build={{.ShortCommit}}
+  goos:
+    - linux
+    - windows
+  goarch:
+    - amd64
+    - arm
+    - arm64
+-
+  id: covid19-timeseries-macos
+  binary: covid19-timeseries
+  env:
+  - CGO_ENABLED=0
+  ldflags:
+    - -s -w -X main.Version={{.Version}}
+    - -s -w -X main.Build={{.ShortCommit}}
+  goos:
+    - darwin
+  goarch:
+    - amd64
+
+archives:
+-
+  id: covid19-timeseries-zip
+  replacements:
+    amd64: x86_64
+  format: zip
+
+checksum:
+  name_template: '{{ .ProjectName}}_checksums.txt'
+
+signs:
+-
+  id: covid19-timeseries
+  signature: "${artifact}"
+  ids:
+  - covid19-timeseries
+  artifacts: all
+  cmd: gpg2
+
+-
+  id: covid19-timeseries-macos
+  signature: "${artifact}.dmg"
+  ids:
+  - covid19-timeseries-macos
+  cmd: gon
+  args:
+  - gon.hcl
+  artifacts: all
+
+snapshot:
+  name_template: "{{ .Tag }}"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+    - '^docs:'
+    - '^test:'
+
+release:
+  github:
+    owner: marcokernler
+    name: covid19-timeseries
+  draft: true
