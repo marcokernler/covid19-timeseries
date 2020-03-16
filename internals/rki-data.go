@@ -23,6 +23,7 @@ type RKIDataItem struct {
 	Lng      string
 	Date     string
 	Cases    string
+	Deaths string
 }
 
 //
@@ -71,13 +72,21 @@ func (r *RKIData) Fetch(url string) error {
 						//
 						casesRaw := cellHtml.Text()
 						casesRunes := []rune(casesRaw)
-						index := strings.Index(casesRaw, "(")
+						startIndex := strings.Index(casesRaw, "(")
+						endIndex := strings.Index(casesRaw, ")")
 
-						// does the raw value contain the deaths?
-						if index > 0 {
-							rkiDataItem.Cases = string(casesRunes[0:index - 1])
+						// cases. does the cell include deaths at all?
+						if startIndex > 0 {
+							rkiDataItem.Cases = string(casesRunes[0:startIndex - 1])
 						} else {
 							rkiDataItem.Cases = casesRaw
+						}
+
+						// deaths. does the cell include deaths at all?
+						if startIndex > 0 {
+							rkiDataItem.Deaths = string(casesRunes[startIndex + 1:endIndex])
+						} else {
+							rkiDataItem.Deaths = "0"
 						}
 					}
 				})
