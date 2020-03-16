@@ -12,14 +12,14 @@ Download the binary for your OS from [here](https://github.com/marcokernler/covi
 # print help
 $ covid19-timeseries help
 
-# update the csv-file an save it under it's original filename
+# fetch and update the csv-files for the cases and deaths an save it under the original filenames
 $ covid19-timeseries
 
-# update the csv-file an save it under test.csv
-$ covid19-timeseries --output test.csv
+# fetch and update the csv-files for the cases and deaths an save it under cases.csv and deaths.csv
+$ covid19-timeseries --cases-output cases.csv --deaths-output deaths.csv
 
 # only fetch data from rki and save under rki.csv
-$ covid19-timeseries --fetch-rki-only --output rki.csv
+$ covid19-timeseries --fetch-rki-only --rki-output rki.csv
 ```
 
 ## Build from Source

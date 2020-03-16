@@ -18,11 +18,12 @@ type CoVDataItem struct {
 type CoVDataItemValue struct {
 	Date  string
 	Cases string
+	Deaths string
 }
 
-//
+// get a single data-item by its province
 func (c *CoVData) getByProvince(province string) CoVDataItem {
-
+	//
 	for _, covDataItem := range c.Items {
 		//
 		if covDataItem.Province == province {

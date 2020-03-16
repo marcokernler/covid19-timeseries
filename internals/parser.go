@@ -11,18 +11,20 @@ import (
 //
 type Parser struct {
 	RkiUrl     string
-	CoVCsvUrl  string
+	CoVCasesCsvUrl  string
+	CoVDeathsCsvUrl string
 	HeaderData CoVDataCSVHeader
 	Data       CoVData
 }
 
-// fetch the current file from github and parse
-// the data into our data-structure
-func (p *Parser) Fetch() error {
+// fetch the current cases file from github and
+// parse the data into our data-structure
+func (p *Parser) FetchCases() error {
 	//
-	log.Printf("Fetching existing data from -> %s", p.CoVCsvUrl)
+	log.Printf("Fetching existing cases data from -> %s", p.CoVCasesCsvUrl)
+
 	//
-	res, err := http.Get(p.CoVCsvUrl)
+	res, err := http.Get(p.CoVCasesCsvUrl)
 	if err != nil {
 		return err
 	}
@@ -65,6 +67,8 @@ func (p *Parser) Fetch() error {
 					covDataItem.Province = record[col]
 				case 1:
 					covDataItem.Country = record[col]
+
+					// log.Printf("item: %d - %s", i, covDataItem.Country)
 				case 2:
 					covDataItem.Lat = record[col]
 				case 3:
@@ -96,8 +100,61 @@ func (p *Parser) Fetch() error {
 	return nil
 }
 
+// fetch the current deaths file from github and
+// parse the data into our data-structure. Currently
+// fetching the cases needs to be done first, since
+// FetchCases will create the base data structure with
+// the dates for the csv file.
+func (p *Parser) FetchDeaths() error {
+	//
+	log.Printf("Fetching existing deaths data from -> %s", p.CoVDeathsCsvUrl)
+
+	//
+	res, err := http.Get(p.CoVDeathsCsvUrl)
+	if err != nil {
+		return err
+	}
+
+	//
+	reader := csv.NewReader(res.Body)
+
+	// read the header of the csv
+	_, err = reader.Read()
+	if err != nil {
+		return err
+	}
+
+	// loop over the records
+	for i := 0; ; i++ {
+		// read the current row
+		record, err := reader.Read()
+
+		// check if we're on the end
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			return err
+		}
+
+		// get item from existing data
+		covDataItem := &p.Data.Items[i]
+
+		// loop over the columns
+		for col := 0; col < len(record); col++ {
+			// only
+			if col >= 4 {
+				// get the value and update the death count
+				itemValue := &covDataItem.Values[col - 4]
+				itemValue.Deaths = record[col]
+			}
+		}
+	}
+
+	return nil
+}
+
 // update the current data model with the data
-// from the data available from the rki
+// from the rki
 func (p *Parser) Update() error {
 	//
 	log.Printf("Fetching data from -> %s", p.RkiUrl)
@@ -139,6 +196,7 @@ func (p *Parser) Update() error {
 				covDataItem.Values = append(covDataItem.Values, CoVDataItemValue{
 					Date:  date,
 					Cases: "0",
+					Deaths: "0",
 				})
 			}
 
@@ -146,6 +204,7 @@ func (p *Parser) Update() error {
 			covDataItem.Values = append(covDataItem.Values, CoVDataItemValue{
 				Date:  rkiDataItem.Date,
 				Cases: rkiDataItem.Cases,
+				Deaths: rkiDataItem.Deaths,
 			})
 
 			// add the item to the list
@@ -155,6 +214,7 @@ func (p *Parser) Update() error {
 			covDataItem.Values = append(covDataItem.Values, CoVDataItemValue{
 				Date:  rkiDataItem.Date,
 				Cases: rkiDataItem.Cases,
+				Deaths: rkiDataItem.Deaths,
 			})
 		}
 	}
@@ -163,8 +223,8 @@ func (p *Parser) Update() error {
 }
 
 // save the current data model to the a file
-// with the given filename
-func (p *Parser) Save(filename string) error {
+// with the given filename for the case count
+func (p *Parser) SaveCases(filename string) error {
 	//
 	file, err := os.Create(filename)
 	if err != nil {
@@ -196,6 +256,59 @@ func (p *Parser) Save(filename string) error {
 		for _, values := range item.Values {
 			// append as column
 			csvString = append(csvString, values.Cases)
+		}
+
+		// write the record
+		err = writer.Write(csvString)
+		if err != nil {
+			return err
+		}
+	}
+
+	// write the buffer to the file
+	writer.Flush()
+	err = writer.Error()
+	if err != nil {
+		return err
+	}
+
+	return file.Close()
+}
+
+// save the current data model to the a file
+// with the given filename for the death count
+func (p *Parser) SaveDeaths(filename string) error {
+	//
+	file, err := os.Create(filename)
+	if err != nil {
+		return err
+	}
+
+	// create the writer
+	writer := csv.NewWriter(file)
+
+	// get the csv header
+	header := p.HeaderData.CSVHeader()
+	// write the header
+	err = writer.Write(header)
+	if err != nil {
+		return err
+	}
+
+	//
+	for _, item := range p.Data.Items {
+		//
+		csvString := []string{
+			item.Province,
+			item.Country,
+			item.Lat,
+			item.Lng,
+		}
+
+		// loop over the values of the item
+		for _, values := range item.Values {
+			// append as column
+			csvString = append(csvString, values.Deaths)
 		}
 
 		// write the record

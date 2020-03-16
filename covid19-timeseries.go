@@ -14,12 +14,15 @@ const Build = ""
 
 //
 const RkiUrl = "https://www.rki.de/DE/Content/InfAZ/N/Neuartiges_Coronavirus/Fallzahlen.html"
-const CoVCsvUrl = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Confirmed.csv"
+const CoVCasesCsvUrl = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Confirmed.csv"
+const CoVDeathsCsvUrl = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Deaths.csv"
 
 //
 func main() {
 	//
-	var filename string
+	var casesFilename string
+	var deathsFilename string
+	var rkiFilename string
 	var fetchRKIOnly bool
 	//
 	app := &cli.App{
@@ -29,18 +32,32 @@ func main() {
 		Usage:       "",
 		Flags: []cli.Flag{
 			&cli.StringFlag{
-				Name:        "output",
-				Usage:       "The filename of the output file.",
+				Name:        "cases-output",
+				Usage:       "The filename of the cases output file.",
 				Value:       "./time_series_19-covid-Confirmed.csv",
-				Aliases:     []string{"o"},
-				Destination: &filename,
+				// Aliases:     []string{"co"},
+				Destination: &casesFilename,
+			},
+			&cli.StringFlag{
+				Name:        "deaths-output",
+				Usage:       "The filename of the deaths output file.",
+				Value:       "./time_series_19-covid-Deaths.csv",
+				// Aliases:     []string{"do"},
+				Destination: &deathsFilename,
 			},
 			&cli.BoolFlag{
 				Name:        "fetch-rki-only",
 				Usage:       "Whether to only fetch the data from the rki without merging with existing data.",
 				Value:       false,
-				Aliases:     []string{"f"},
+				// Aliases:     []string{"f"},
 				Destination: &fetchRKIOnly,
+			},
+			&cli.StringFlag{
+				Name:        "rki-output",
+				Usage:       "The filename of the rki file. (only available while in fetch-rki-only mode)",
+				Value:       "./rki.csv",
+				// Aliases:     []string{"ro"},
+				Destination: &rkiFilename,
 			},
 		},
 		Action: func(c *cli.Context) error {
@@ -50,7 +67,7 @@ func main() {
 			// only fetch from rki?
 			if fetchRKIOnly {
 				//
-				err = fetchFromRKI(filename)
+				err = fetchFromRKI(rkiFilename)
 				if err != nil {
 					log.Printf("Error: %s", err)
 				}
@@ -59,7 +76,7 @@ func main() {
 			}
 
 			// process normally
-			err = mergeWithCoVData(filename)
+			err = mergeWithCoVData(casesFilename, deathsFilename)
 			if err != nil {
 				log.Printf("Error: %s", err)
 			}
@@ -76,22 +93,27 @@ func main() {
 
 // fetch and merge the existing file and
 // output it to a csv file.
-func mergeWithCoVData(filename string) error {
+func mergeWithCoVData(casesFilename string, deathsFilename string) error {
 	//
 	var err error
 	//
 	p := internals.Parser{
-		RkiUrl:    RkiUrl,
-		CoVCsvUrl: CoVCsvUrl,
+		RkiUrl:          RkiUrl,
+		CoVCasesCsvUrl:  CoVCasesCsvUrl,
+		CoVDeathsCsvUrl: CoVDeathsCsvUrl,
 	}
 
-	// fetch current file
-	err = p.Fetch()
+	// fetch current cases file
+	err = p.FetchCases()
 	if err != nil {
 		log.Printf("Error: %s", err)
 	}
-	originalValuesLen := len(p.Data.Items)
-	log.Printf("Done! Found %d existing entries...", originalValuesLen)
+
+	// fetch current deaths file
+	err = p.FetchDeaths()
+	if err != nil {
+		log.Printf("Error: %s", err)
+	}
 
 	// update with rki data
 	err = p.Update()
@@ -99,13 +121,19 @@ func mergeWithCoVData(filename string) error {
 		log.Printf("Error: %s", err)
 	}
 
-	// save as csv
-	err = p.Save(filename)
+	// save cases as csv
+	err = p.SaveCases(casesFilename)
 	if err != nil {
 		log.Printf("Error: %s", err)
 	}
 
-	log.Printf("Finished. Created CSV file under '%s'", filename)
+	// save cases as csv
+	err = p.SaveDeaths(deathsFilename)
+	if err != nil {
+		log.Printf("Error: %s", err)
+	}
+
+	log.Printf("Finished. Created CSV files under '%s' and '%s'", casesFilename, deathsFilename)
 
 	return nil
 }
