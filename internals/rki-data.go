@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -68,7 +69,16 @@ func (r *RKIData) Fetch(url string) error {
 						rkiDataItem.Province = provinceI18n(cellHtml.Text())
 					case 1:
 						//
-						rkiDataItem.Cases = cellHtml.Text()
+						casesRaw := cellHtml.Text()
+						casesRunes := []rune(casesRaw)
+						index := strings.Index(casesRaw, "(")
+
+						// does the raw value contain the deaths?
+						if index > 0 {
+							rkiDataItem.Cases = string(casesRunes[0:index - 1])
+						} else {
+							rkiDataItem.Cases = casesRaw
+						}
 					}
 				})
 
