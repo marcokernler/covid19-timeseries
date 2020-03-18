@@ -70,24 +70,10 @@ func (r *RKIData) Fetch(url string) error {
 						rkiDataItem.Province = provinceI18n(cellHtml.Text())
 					case 1:
 						//
-						casesRaw := cellHtml.Text()
-						casesRunes := []rune(casesRaw)
-						startIndex := strings.Index(casesRaw, "(")
-						endIndex := strings.Index(casesRaw, ")")
-
-						// cases. does the cell include deaths at all?
-						if startIndex > 0 {
-							rkiDataItem.Cases = string(casesRunes[0:startIndex - 1])
-						} else {
-							rkiDataItem.Cases = casesRaw
-						}
-
-						// deaths. does the cell include deaths at all?
-						if startIndex > 0 {
-							rkiDataItem.Deaths = string(casesRunes[startIndex + 1:endIndex])
-						} else {
-							rkiDataItem.Deaths = "0"
-						}
+						rkiDataItem.Cases = strings.Replace(cellHtml.Text(), ".", "", -1)
+					case 4:
+						//
+						rkiDataItem.Deaths = strings.Replace(cellHtml.Text(), ".", "", -1)
 					}
 				})
 
